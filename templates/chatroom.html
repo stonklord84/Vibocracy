@@ -1,0 +1,47 @@
+<html lang="en">
+<head>
+    <title>{{ room_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='layout.css') }}">
+</head>
+<body>
+    <div class="screen-wrapper-chatroom">
+        <aside class="chatroom-sidebar">
+            <p> Welcome to {{ room_name }}</p>
+            <a href="{{ url_for('dashboard') }}">Go back to dashboard!</a><br>
+            {% if is_room_owner %}
+                <button onclick="document.getElementById('invite-user').showModal()">
+                    Invite user
+                </button><br>
+                <button onclick="document.getElementById('delete-chatroom').showModal()">
+                    Delete this chatroom
+                </button>
+            {% endif %}
+            <h6>room id: {{room_id}}</h6>
+        </aside>
+        <main>
+            <div id="chat-window" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll;">
+                </div>
+            <input type="text" id="message_input" placeholder="say something...">
+            <button id="send-message">Send</button>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+            <div id="room_id" room_id="{{room_id}}"></div>
+            <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+        </main>
+    </div>
+    <dialog id="delete-chatroom">
+        <p>Delete chatroom? This action cannot be undone!</p><br>
+        <form action="{{ url_for('delete_chatroom', room_id=room_id) }}" method="POST">
+            <button type="submit">Confirm</button>
+            <button type="button" onclick="document.getElementById('delete-chatroom').close()">Cancel</button>
+        </form>
+    </dialog>
+    <dialog id="invite-user">
+        <form action="{{ url_for('invite_user', room_id=room_id) }}" method="POST">
+            <label for="invite_username">Invite a friend!</label><br>
+            <input name="invite_username" type="text" placeholder="Enter their username" required>
+            <button type="submit">confirm</button>
+            <button type="button" onclick="document.getElementById('invite-user').close()">cancel</button>
+        </form>
+    </dialog>
+</body>
+</html>

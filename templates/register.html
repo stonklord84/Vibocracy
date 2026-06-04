@@ -1,0 +1,21 @@
+<html lang="en">
+<head>
+    <title>Vibocracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='layout.css') }}">
+</head>
+<body>
+    <div class="screen-wrapper">
+        <div class="loginbox">
+            <h2>Create a Vibocracy account</h2>
+            <form action="{{ url_for('register') }}" method="POST">
+                <label for="username">Create a username:</label><br>
+                <input type="text" name="username" required><br>
+                <label for="password">Create a password</label><br>
+                <input type="password" name="password" required><br><br>
+                <button type="submit">register</button><br>
+                <p id="errortext" class="{{usernamestatus}}">This username is already taken! Pick a different one.</p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

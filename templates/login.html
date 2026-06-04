@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <title>Vibocracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='layout.css') }} ">
+</head>
+<body>
+    <div class="screen-wrapper">
+        <div class="loginbox">
+            <h2>Login to Vibocracy</h2>
+            <form action="{{url_for('login')}}" method="POST">
+                <label for="username">Username</label><br>
+                <input type="text" name="username" required><br>
+                <label for="password">Password</label><br>
+                <input type="password" name="password" required><br><br>
+                <button type="submit">Login</button><br>
+                <p id="errortext" class="{{loginstatus}}">Incorrect username or password. Try again!</p>
+                <a href=" {{url_for('register')}} ">Don't have an account? Register now!</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
