@@ -19,13 +19,12 @@
             <h6>room id: {{room_id}}</h6>
         </aside>
         <main>
-            <div id="chat-window" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll;">
-                </div>
-            <input type="text" id="message_input" placeholder="say something...">
+            <div id="chat-window" style="position: relative; border: 1px solid #ccc; height: 400px; overflow-y: scroll;">
+                <p id="typing-indicator" style="position: absolute; left: 0; bottom: 0;"></p>
+            </div>
+            <input type="text" id="message-input" placeholder="say something...">
             <button id="send-message">Send</button>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
             <div id="room_id" room_id="{{room_id}}"></div>
-            <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
         </main>
     </div>
     <dialog id="delete-chatroom">
@@ -36,12 +35,17 @@
         </form>
     </dialog>
     <dialog id="invite-user">
-        <form action="{{ url_for('invite_user', room_id=room_id) }}" method="POST">
+        <form>
             <label for="invite_username">Invite a friend!</label><br>
-            <input name="invite_username" type="text" placeholder="Enter their username" required>
-            <button type="submit">confirm</button>
+            <input name="invite_username" type="text" placeholder="Enter their username" required id="invited-username">
+            <button type="submit" id="invite-user-submitbutton">confirm</button>
             <button type="button" onclick="document.getElementById('invite-user').close()">cancel</button>
         </form>
     </dialog>
+    <div id="room-name" room_name="{{room_name}}"></div>
+    <div id="room-id" room_id="{{room_id}}"></div>
+    <div id="current-userid" current_userid="{{current_userid}}"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>

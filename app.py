@@ -3,12 +3,59 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import sqlite3
 import os
+import time
 # session is the authentication & security tool for when redirect(url_for()) has to be used
 
 app = Flask(__name__)
 CORS(app)
 app.secret_key = 'secret_key'
 socketio = SocketIO(app)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_DIR = os.path.join(BASE_DIR, 'appdata', 'data.db')
+
+@socketio.on('join_dashboard')
+def join_dashboard(data):
+    private_room = data['username']
+    join_room(private_room)
+    print(f"{private_room} joined")
+
+@socketio.on('send_invite')
+def send_invite(data):
+    room_name = data['room_name']
+    room_id = data['room_id']
+    invited_username = data['invited_username']
+
+    conn = sqlite3.connect(DB_DIR)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM users WHERE username=?;", (invited_username,))
+        invited_user = cursor.fetchone()
+        if invited_user:
+            print('is this working')
+            invited_user_id = invited_user[0]
+            cursor.execute("SELECT user_id FROM room_members WHERE user_id=? AND room_id=?;",
+                           (invited_user_id, room_id))
+            already_member = cursor.fetchone()
+            if not already_member:
+                cursor.execute("INSERT INTO room_members (room_id, user_id, invite_status) VALUES " \
+                "(?, ?, ?);", (room_id, invited_user_id, 'pending'))
+                conn.commit()
+                print('invite successfully sent')
+                emit('receive_invite', {
+                    'room_name': room_name,
+                    'room_id': room_id
+                    }, to=invited_username)
+            else:
+                print('you already invited this person!')
+        else:
+            print('such a user does not exist')
+    except sqlite3.Error as e:
+        print(f"database error: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 @socketio.on('join')
 def on_join(data):
@@ -27,8 +74,25 @@ def handle_message(data):
         'username': username
     },to=room)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_DIR = os.path.join(BASE_DIR, 'appdata', 'data.db')
+@socketio.on('typing_started')
+def typing_started(data):
+    username = session.get('username', 'Anonymous')
+    user_id = session.get('user_id', 'Anonymous')
+    room = data['room_id']
+    emit('update_typing_indicator', {
+        'username': username,
+        'user_id': user_id,
+        'status': 'started'
+    },to=room)
+
+@socketio.on('typing_ended')
+def typing_ended(data):
+    username = session.get('username', 'Anonymous')
+    room = data['room_id']
+    emit('update_typing_indicator', {
+        'username': username,
+        'status': 'ended'
+    },to=room)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -127,30 +191,6 @@ def delete_chatroom(room_id):
         conn.close()
     return redirect(url_for('dashboard'))
 
-@app.route('/api/invite/<int:room_id>', methods=['POST'])
-def invite_user(room_id):
-    if request.method=="POST":
-        conn = sqlite3.connect(DB_DIR)
-        cursor = conn.cursor()
-        invite_username = request.form.get("invite_username")
-        print('invite:', invite_username)
-        cursor.execute("SELECT user_id FROM room_members WHERE room_id=?;", (room_id,))
-        members = cursor.fetchall()
-        members = [member[0] for member in members]
-        cursor.execute("SELECT id FROM users")
-        all_users = cursor.fetchall()
-        all_users = [user[0] for user in all_users]
-        cursor.execute("SELECT id FROM users WHERE username=?;", (invite_username,))
-        invite_user_id = cursor.fetchone()
-        if invite_user_id:
-            if invite_user_id[0] not in members:
-                cursor.execute("INSERT INTO room_members (room_id, user_id, invite_status) VALUES (?, ?, ?);", (room_id, invite_user_id[0], 'pending'))
-            else:
-                print('this user is already in the room')
-        else:
-            print('such a user does not exist!')
-    conn.commit()
-    return redirect(url_for('chatroom', room_id=room_id))
 
 @app.route('/api/respond_to_invite/<int:room_id>', methods=['POST'])
 def respond_to_invite(room_id):
@@ -181,7 +221,9 @@ def chatroom(room_id):
     is_room_owner = False
     if room_owner_id == session['user_id']:
         is_room_owner = True
-    return render_template("chatroom.html", room_name=room_name, room_id=room_id, is_room_owner=is_room_owner)
+    current_userid = session['user_id']
+    return render_template("chatroom.html", room_name=room_name, current_userid=current_userid,
+                            room_id=room_id, is_room_owner=is_room_owner)
 
 if __name__ == "__main__":
     #app.run(debug=True, port=5000)

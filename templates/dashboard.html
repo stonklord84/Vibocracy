@@ -2,56 +2,59 @@
 <head>
     <title>Vibocracy</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='layout.css') }}">
+
 </head>
 <body>
     <div class="screen-wrapper">
         <h1>{{current_username}}'s dashboard</h1><br>
         <h3>Rooms you own</h3>
-        <div class="grid-container">
+        <ul class="grid-container">
             {% if current_owned_rooms %}
                 {% for id, name in current_owned_rooms %}
-                    <a href="{{ url_for('chatroom', room_id=id) }}" class="card-link">
-                        <div class="grid-item">
+                    <li class="grid-item">
+                        <a href="{{ url_for('chatroom', room_id=id) }}" class="card-link">
                             <h3>{{ name }}</h3>
-                        </div>
-                    </a>
+                        </a>
+                    </li>
                 {% endfor %}
             {% else %}
-                <p>You currently haven't created any rooms</p>
+                <li>
+                    <p>You currently haven't created any rooms</p>
+                </li>
             {% endif %}
-            <div class="grid-item" onclick="document.getElementById('popup-box').showModal()" style="cursor: pointer;">
+            <li class="grid-item" onclick="document.getElementById('popup-box').showModal()" style="cursor: pointer;">
                 <h3>Create room</h3>
-            </div>
-        </div>
+            </li>
+        </ul>
         <h3>Rooms you're a member of</h3>
-        <div class="grid-container">
+        <ul class="grid-container" id="room-list">
             {% if current_membership_rooms %}
                 {% for id, name, invite_status in current_membership_rooms %}
                     {% if invite_status == 'accepted' %}
-                        <a href="{{ url_for('chatroom', room_id=id) }}" class="card-link">
-                            <div class="grid-item">
+                        <li class="grid-item">
+                            <a href="{{ url_for('chatroom', room_id=id) }}" class="card-link">
                                 <h3>{{ name }}</h3>
-                            </div>
-                        </a>
+                            </a>
+                        </li>
                     {% elif invite_status == 'pending' %}
-                        <div class="grid-item" onclick="document.getElementById('popup-box-invite').showModal()" style="cursor: pointer;">
+                        <li class="grid-item" onclick="document.getElementById('popup-box-invite-{{id}}').showModal()" style="cursor: pointer;">
                             <h3>pending invite for {{ name }}</h3>
-                        </div>
+                        </li>
 
-                        <dialog id="popup-box-invite">
+                        <dialog id="popup-box-invite-{{id}}">
                             Accept invite?
                             <form action="{{ url_for('respond_to_invite', room_id=id) }}" method="POST">
                                 <button type="submit" name="action" value="accept">Accept</button>
                                 <button type="submit" name="action" value="reject">Reject</button>
                             </form>
-                            <button type="button" onclick="document.getElementById('popup-box-invite').close()">Cancel</button>
+                            <button type="button" onclick="document.getElementById('popup-box-invite-{{id}}').close()">Cancel</button>
                         </dialog>
                     {% endif %}
                 {% endfor %}
             {% else %}
                 <p>You haven't been invited to any chatrooms!</p>
             {% endif %}
-        </div>
+        </ul>
         <dialog id="popup-box">
             <form action="{{ url_for('create_chatroom') }}" method="POST">
                 <label for="roomname">Choose your room name</label>
@@ -61,6 +64,8 @@
             <button onclick="document.getElementById('popup-box').close()">Cancel</button>
         </dialog>
     </div>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <div id="current_username" username="{{current_username}}"></div>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>
