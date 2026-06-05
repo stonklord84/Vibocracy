@@ -3,7 +3,6 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import sqlite3
 import os
-import time
 # session is the authentication & security tool for when redirect(url_for()) has to be used
 
 app = Flask(__name__)
@@ -67,6 +66,15 @@ def on_join(data):
 def handle_message(data):
     room = data['room_id']
     msg_text = data['message']
+    author_userid = data['my_userid']
+    conn = sqlite3.connect(DB_DIR)
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM users WHERE id=?;", (author_userid,))
+    author_username = cursor.fetchone()[0]
+    cursor.execute("INSERT INTO messages (room_id, username, message_content) VALUES (?, ?, ?);",
+                   (room, author_username, msg_text))
+    conn.commit()
+    conn.close()
     username = session.get('username', 'Anonymous')
 
     emit('receive_message', {
@@ -222,8 +230,11 @@ def chatroom(room_id):
     if room_owner_id == session['user_id']:
         is_room_owner = True
     current_userid = session['user_id']
+    cursor.execute("SELECT username, message_content FROM messages WHERE room_id =?;", (room_id,))
+    messages_list = cursor.fetchall()
+    print(messages_list, 'this is the messages_list')
     return render_template("chatroom.html", room_name=room_name, current_userid=current_userid,
-                            room_id=room_id, is_room_owner=is_room_owner)
+                            room_id=room_id, is_room_owner=is_room_owner, messages_list=messages_list)
 
 if __name__ == "__main__":
     #app.run(debug=True, port=5000)

@@ -19,7 +19,11 @@
             <h6>room id: {{room_id}}</h6>
         </aside>
         <main>
-            <div id="chat-window" style="position: relative; border: 1px solid #ccc; height: 400px; overflow-y: scroll;">
+            <div id="chat-window" style="position: relative; border: 1px solid #ccc; 
+            height: 400px; overflow-y: scroll; display: flex; flex-direction: column; align-items: left;">
+                {% for username, msg_content in messages_list %}
+                    <p><strong>{{ username }}:</strong> {{ msg_content }}</p>
+                {% endfor %}
                 <p id="typing-indicator" style="position: absolute; left: 0; bottom: 0;"></p>
             </div>
             <input type="text" id="message-input" placeholder="say something...">

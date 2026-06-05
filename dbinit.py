@@ -40,6 +40,17 @@ CREATE TABLE IF NOT EXISTS room_members(
                );
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS messages(
+               room_id INTEGER NOT NULL,
+               username TEXT NOT NULL,
+               message_content TEXT NOT NULL,
+               timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+               FOREIGN KEY (room_id) REFERENCES chatrooms(id),
+               FOREIGN KEY (username) REFERENCES users(username)
+               );
+""")
+
 # cursor.execute("INSERT INTO room_members (room_id, user_id) VALUES (?, ?);", (1, 1))
 # cursor.execute("INSERT INTO room_members (room_id, user_id) VALUES (?, ?);", (3, 1))
 # cursor.execute("INSERT INTO room_members (room_id, user_id) VALUES (?, ?);", (4, 1))

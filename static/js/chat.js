@@ -16,6 +16,7 @@ document.getElementById('send-message').addEventListener('click', function(){
     socket.emit('send_message', {
         'room_id': room_id,
         'message': message_content,
+        'my_userid': my_userid
     });
     input_element.value = '';
 });
